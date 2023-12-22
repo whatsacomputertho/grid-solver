@@ -1,0 +1,11 @@
+[package]
+name = "grid-solver"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+petgraph = { version = "0.6.4" }
+lazy_static = { version = "1.4.0" }
+json = { version = "0.12.4" }
