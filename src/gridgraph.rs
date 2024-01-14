@@ -3,8 +3,6 @@ use petgraph::Undirected;
 use petgraph::graph::Graph;
 use petgraph::visit::NodeIndexable;
 
-use crate::gridpath::GridPath;
-
 /// # GridGraph struct
 ///
 /// A `GridGraph` is an n by m grid of vertices where each
@@ -259,33 +257,6 @@ impl GridGraph {
 
         //If none of the forbidden cases are satisfied then return false
         false
-    }
-
-    /// Check whether the Hamiltonian path problem over this gird
-    /// graph is prime given its start and end vertices, and if so,
-    /// return the GridPath solution to the problem
-    pub fn get_prime_solution(&self, v_coords: [usize; 2], w_coords: [usize; 2]) -> Option<GridPath> {
-        //Sanity check on the input parameters
-        if v_coords[0] >= self.n || v_coords[1] >= self.m ||
-           w_coords[0] >= self.n || w_coords[1] >= self.m {
-            panic!(
-                "Coordinates out of bounds: ({},{}), ({},{})",
-                v_coords[0], v_coords[1],
-                w_coords[0], w_coords[1]
-            )
-        }
-
-        //Check if (n, m) is a possible prime case, if so then check
-        //the primality conditions for that case
-        match [self.n, self.m] {
-            [2, 2] => None,
-            [2, 3] => None,
-            [3, 2] => None,
-            [3, 3] => None,
-            [4, 5] => None,
-            [5, 4] => None,
-            _      => None
-        }
     }
 }
 
