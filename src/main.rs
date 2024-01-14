@@ -9,39 +9,27 @@ use crate::gridproblem::GridProblem;
 use crate::gridextension::GridExtension;
 
 fn main() {
-    //Initialize a possibly prime grid graph and print it
-    let prime_grid_graph: GridGraph = GridGraph::new(4, 5);
+    //Initialize a prime grid graph which is extended in every
+    //direction.  This is intended to test our stripping functionality.
+    //The original prime grid graph is 4 x 5 with start and end coords
+    //(1, 1) and (0, 1) respectively.  The resulting extended graph is
+    //8 x 9 with start and end coords (3, 3) and (2, 3) respectively.
+    let prime_grid_graph: GridGraph = GridGraph::new(8, 9);
     println!("Dimension 4 x 5 grid graph (possibly prime)");
     println!("{}", prime_grid_graph);
-
-    //Initialize a prime grid problem from the grid graph
     let mut prime_grid_problem: GridProblem = GridProblem::from_grid_graph(
         prime_grid_graph,
-        [1, 1], [0, 1]
+        [3, 3], [2, 3]
     );
 
-    //Solve the prime grid problem and print the solution
+    //Check if the prime grid problem can be stripped (should be true)
+    println!("Can the problem be stripped? {}", prime_grid_problem.can_be_stripped());
+
+    //Solve the prime grid problem and print the solution.  The problem
+    //should have been stripped down until the prime 4 x 5 problem was encountered
+    //at which point it should have retrieved the prime solution and then extended
+    //the solution back up to the 8 x 9 case.
     let mut prime_solution: GridPath = prime_grid_problem.solve().unwrap();
     println!("Solution");
-    println!("{}", prime_solution);
-
-    //Extend the prime grid solution to the right
-    prime_solution.extend(GridExtension::Right);
-    println!("Right-extended solution");
-    println!("{}", prime_solution);
-
-    //Extend the prime grid solution upward
-    prime_solution.extend(GridExtension::Up);
-    println!("Up-extended solution");
-    println!("{}", prime_solution);
-
-    //Extend the prime grid solution to the left
-    prime_solution.extend(GridExtension::Left);
-    println!("Left-extended solution");
-    println!("{}", prime_solution);
-
-    //Extend the prime grid solution downward
-    prime_solution.extend(GridExtension::Down);
-    println!("Down-extended solution");
     println!("{}", prime_solution);
 }

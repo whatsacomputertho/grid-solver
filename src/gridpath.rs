@@ -183,6 +183,8 @@ impl GridPath {
 
     /// Extend the GridPath with a height-2 strip in the upward direction
     fn extend_up(&mut self) {
+        //TODO: Remove debug println
+        println!("Extending up");
         //Loop through the vertices in the vertex order until vertices are
         //found forming an edge on the upper boundary of the grid.  Once
         //found extend the grid path along that edge.
@@ -198,7 +200,7 @@ impl GridPath {
             let left_first: bool = self.vertex_order[i-1][0] < self.vertex_order[i][0];
             let start_range = if left_first { (0..self.vertex_order[i-1][0] + 1).rev().collect::<Vec<_>>() } else { ((self.vertex_order[i-1][0])..self.n).collect::<Vec<_>>() };
             let mid_range = if left_first { (0..self.n).collect::<Vec<_>>() } else { ((0..self.n).rev()).collect::<Vec<_>>() };
-            let end_range = if left_first { (self.vertex_order[i][0]..self.n).rev().collect::<Vec<_>>() } else { (0..self.vertex_order[i][0]).collect::<Vec<_>>() };
+            let end_range = if left_first { (self.vertex_order[i][0]..self.n).rev().collect::<Vec<_>>() } else { (0..self.vertex_order[i][0] + 1).collect::<Vec<_>>() };
 
             //Initialize a Vec<[usize; 2]> containing the path to add
             let mut ext_path: Vec<[usize; 2]> = Vec::new();
@@ -236,6 +238,8 @@ impl GridPath {
 
     /// Extend the GridPath with a height-2 strip in the downward direction
     fn extend_down(&mut self) {
+        //TODO: Remove debug println
+        println!("Extending down");
         //Loop through the vertices in the vertex order until vertices are
         //found forming an edge on the upper boundary of the grid.  Once
         //found extend the grid path along that edge.
@@ -291,6 +295,8 @@ impl GridPath {
 
     /// Extend the GridPath with a width-2 strip in the rightward direction
     fn extend_right(&mut self) {
+        //TODO: Remove debug println
+        println!("Extending right");
         //Loop through the vertices in the vertex order until vertices are
         //found forming an edge on the right boundary of the grid.  Once found
         //extend the grid path along that edge.
@@ -343,6 +349,8 @@ impl GridPath {
     
     /// Extend the GridPath with a width-2 strip in the leftward direction
     fn extend_left(&mut self) {
+        //TODO: Remove debug println
+        println!("Extending left");
         //Loop through the vertices in the vertex order until vertices are
         //found forming an edge on the left boundary of the grid.  Once found
         //extend the grid path along that edge.
