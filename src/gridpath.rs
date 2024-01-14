@@ -1,3 +1,5 @@
+use crate::gridextension::GridExtension;
+
 use std::fmt;
 use petgraph::Undirected;
 use petgraph::graph::Graph;
@@ -12,6 +14,7 @@ use json::JsonValue;
 pub struct GridPath {
     n: usize,
     m: usize,
+    vertex_order: Vec<[usize; 2]>,
     graph: Graph<String, String, Undirected>
 }
 
@@ -24,6 +27,21 @@ impl GridPath {
     /// let my_grid_graph: GridPath = GridPath::new(4_usize, 3_usize);
     /// ```
     pub fn new(n: usize, m: usize, vertex_order: Vec<[usize; 2]>) -> GridPath {
+        //Get the graph given the vertex order
+        let graph = GridPath::get_graph_from_vertex_order(n, m, &vertex_order);
+
+        //Initialize the GridPath
+        GridPath {
+            n: n,
+            m: m,
+            vertex_order: vertex_order,
+            graph: graph
+        }
+    }
+
+    /// Given dimensions and a vertext order, get a grid-shaped petgraph graph
+    /// structure with edges forming the path given by the vertex order.
+    fn get_graph_from_vertex_order(n: usize, m: usize, vertex_order: &Vec<[usize; 2]>) -> Graph<String, String, Undirected> {
         //Initialize the graph
         let mut graph = Graph::new_undirected();
 
@@ -51,22 +69,8 @@ impl GridPath {
             graph.add_edge(n1, n2, String::from(""));
         }
 
-        //Initialize the GridPath
-        GridPath {
-            n: n,
-            m: m,
-            graph: graph
-        }
-    }
-
-    /// Get the width of a grid graph
-    pub fn get_width(&self) -> usize {
-        self.n
-    }
-
-    /// Get the height of a grid graph
-    pub fn get_height(&self) -> usize {
-        self.m
+        //Return the graph
+        graph
     }
 
     /// Check if there exists a prime solution for the given
@@ -135,6 +139,278 @@ impl GridPath {
 
         //If we make it out of the loop then no solution was found, return None
         return None;
+    }
+
+    /// Get the width of a grid graph
+    pub fn get_width(&self) -> usize {
+        self.n
+    }
+
+    /// Get the height of a grid graph
+    pub fn get_height(&self) -> usize {
+        self.m
+    }
+
+    /// Increment the x coordinate of all vertices by a usize
+    fn get_right_shift_vertex_order(&self, shift: usize) -> Vec<[usize; 2]> {
+        //Initialize a new vertex order vec
+        let mut new_vertex_order: Vec<[usize; 2]> = Vec::new();
+
+        //Loop through the current vertex order vec and populate the new
+        //vertex order vec with vertices shifted n to the right
+        for vertex in self.vertex_order.iter() {
+            new_vertex_order.push([vertex[0] + shift, vertex[1]]);
+        }
+
+        //Return the new vertex order
+        new_vertex_order
+    }
+
+    /// Increment the x coordinate of all vertices by a usize
+    fn get_up_shift_vertex_order(&self, shift: usize) -> Vec<[usize; 2]> {
+        //Initialize a new vertex order vec
+        let mut new_vertex_order: Vec<[usize; 2]> = Vec::new();
+
+        //Loop through the current vertex order vec and populate the new
+        //vertex order vec with vertices shifted n above
+        for vertex in self.vertex_order.iter() {
+            new_vertex_order.push([vertex[0], vertex[1] + shift]);
+        }
+        
+        //Return the new vertex order
+        new_vertex_order
+    }
+
+    /// Extend the GridPath with a height-2 strip in the upward direction
+    fn extend_up(&mut self) {
+        //Loop through the vertices in the vertex order until vertices are
+        //found forming an edge on the upper boundary of the grid.  Once
+        //found extend the grid path along that edge.
+        for i in 1..self.vertex_order.len() {
+            //Check if the ith and i-1th vertices are on the upper boundary
+            let bound: usize = self.m - 1;
+            if self.vertex_order[i][1] != bound || self.vertex_order[i-1][1] != bound {
+                continue;
+            }
+
+            //If they are then decide which direction to move first and
+            //construct the loop ranges accordingly
+            let left_first: bool = self.vertex_order[i-1][0] < self.vertex_order[i][0];
+            let start_range = if left_first { (0..self.vertex_order[i-1][0] + 1).rev().collect::<Vec<_>>() } else { ((self.vertex_order[i-1][0])..self.n).collect::<Vec<_>>() };
+            let mid_range = if left_first { (0..self.n).collect::<Vec<_>>() } else { ((0..self.n).rev()).collect::<Vec<_>>() };
+            let end_range = if left_first { (self.vertex_order[i][0]..self.n).rev().collect::<Vec<_>>() } else { (0..self.vertex_order[i][0]).collect::<Vec<_>>() };
+
+            //Initialize a Vec<[usize; 2]> containing the path to add
+            let mut ext_path: Vec<[usize; 2]> = Vec::new();
+
+            //Extend the GridPath up by 2
+            for j in start_range {
+                let next_vertex: [usize; 2] = [j, self.m];
+                ext_path.push(next_vertex);
+            }
+            for j in mid_range {
+                let next_vertex: [usize; 2] = [j, self.m + 1];
+                ext_path.push(next_vertex);
+            }
+            for j in end_range {
+                let next_vertex: [usize; 2] = [j, self.m];
+                ext_path.push(next_vertex);
+            }
+
+            //Insert the newly constructed path into the existing vertex order
+            //between the i and i-1 vertices
+            self.vertex_order.splice(i..i, ext_path);
+
+            //Initialize a new petgraph graph for display of the path and return
+            let new_graph = GridPath::get_graph_from_vertex_order(self.n, self.m + 2, &self.vertex_order);
+            self.graph = new_graph;
+
+            //Update the vertical dimension of the graph and return
+            self.m += 2;
+            return;
+        }
+
+        //If we reach this point then panic, the graph cannot be extended up
+        panic!("No edges on upper boundary of the grid, cannot extend upward");
+    }
+
+    /// Extend the GridPath with a height-2 strip in the downward direction
+    fn extend_down(&mut self) {
+        //Loop through the vertices in the vertex order until vertices are
+        //found forming an edge on the upper boundary of the grid.  Once
+        //found extend the grid path along that edge.
+        for i in 1..self.vertex_order.len() {
+            //Check if the ith and i-1th vertices are on the lower boundary
+            if self.vertex_order[i][1] != 0 || self.vertex_order[i-1][1] != 0 {
+                continue;
+            }
+
+            //If found then shift the grid path upward by 2
+            let mut new_vertex_order: Vec<[usize; 2]> = self.get_up_shift_vertex_order(2);
+
+            //Decide which direction to move first and construct the loop ranges accordingly
+            let left_first: bool = new_vertex_order[i-1][0] < new_vertex_order[i][0];
+            let start_range = if left_first { (0..new_vertex_order[i-1][0] + 1).rev().collect::<Vec<_>>() } else { ((new_vertex_order[i-1][0])..self.n).collect::<Vec<_>>() };
+            let mid_range = if left_first { (0..self.n).collect::<Vec<_>>() } else { (0..self.n).rev().collect::<Vec<_>>() };
+            let end_range = if left_first { (new_vertex_order[i][0]..self.n).rev().collect::<Vec<_>>() } else { (0..new_vertex_order[i][0] + 1).collect::<Vec<_>>() };
+
+            //Initialize a Vec<[usize; 2]> containing the path to add
+            let mut ext_path: Vec<[usize; 2]> = Vec::new();
+
+            //Extend the GridPath up by 2
+            for j in start_range {
+                let next_vertex: [usize; 2] = [j, 1];
+                ext_path.push(next_vertex);
+            }
+            for j in mid_range {
+                let next_vertex: [usize; 2] = [j, 0];
+                ext_path.push(next_vertex);
+            }
+            for j in end_range {
+                let next_vertex: [usize; 2] = [j, 1];
+                ext_path.push(next_vertex);
+            }
+
+            //Insert the newly constructed path into the new vertex order
+            //between the i and i-1 vertices and overwrite the current vertex order
+            new_vertex_order.splice(i..i, ext_path);
+            self.vertex_order = new_vertex_order;
+
+            //Initialize a new petgraph graph for display of the path and return
+            let new_graph = GridPath::get_graph_from_vertex_order(self.n, self.m + 2, &self.vertex_order);
+            self.graph = new_graph;
+
+            //Update the vertical dimension of the graph and return
+            self.m += 2;
+            return;
+        }
+
+        //If we reach this point then panic, the graph cannot be extended down
+        panic!("No edges on lower boundary of the grid, cannot extend downward");
+    }
+
+    /// Extend the GridPath with a width-2 strip in the rightward direction
+    fn extend_right(&mut self) {
+        //Loop through the vertices in the vertex order until vertices are
+        //found forming an edge on the right boundary of the grid.  Once found
+        //extend the grid path along that edge.
+        for i in 1..self.vertex_order.len() {
+            //Check if the ith and i-1th vertices are on the right boundary
+            let bound: usize = self.n - 1;
+            if self.vertex_order[i][0] != bound || self.vertex_order[i-1][0] != bound {
+                continue;
+            }
+
+            //Decide which direction to move first and construct the loop ranges accordingly
+            let down_first: bool = self.vertex_order[i-1][1] < self.vertex_order[i][1];
+            let start_range = if down_first { (0..self.vertex_order[i-1][1] + 1).rev().collect::<Vec<_>>() } else { ((self.vertex_order[i-1][1])..self.m).collect::<Vec<_>>() };
+            let mid_range = if down_first { (0..self.m).collect::<Vec<_>>() } else { (0..self.m).rev().collect::<Vec<_>>() };
+            let end_range = if down_first { (self.vertex_order[i][1]..self.m).rev().collect::<Vec<_>>() } else { (0..self.vertex_order[i][1] + 1).collect::<Vec<_>>() };
+
+            //Initialize a Vec<[usize; 2]> containing the path to add
+            let mut ext_path: Vec<[usize; 2]> = Vec::new();
+
+            //Extend the GridPath to the right by 2
+            for j in start_range {
+                let next_vertex: [usize; 2] = [self.n, j];
+                ext_path.push(next_vertex);
+            }
+            for j in mid_range {
+                let next_vertex: [usize; 2] = [self.n + 1, j];
+                ext_path.push(next_vertex);
+            }
+            for j in end_range {
+                let next_vertex: [usize; 2] = [self.n, j];
+                ext_path.push(next_vertex);
+            }
+
+            //Insert the newly constructed path into the new vertex order
+            //between the i and i-1 vertices and overwrite the current vertex order
+            self.vertex_order.splice(i..i, ext_path);
+
+            //Initialize a new petgraph graph for display of the path and return
+            let new_graph = GridPath::get_graph_from_vertex_order(self.n + 2, self.m, &self.vertex_order);
+            self.graph = new_graph;
+
+            //Update the horizontal dimension of the graph and return
+            self.n += 2;
+            return;
+        }
+
+        //If we reach this point then panic, the graph cannot be extended to the right
+        panic!("No edges on right boundary of the grid, cannot extend to the right");
+    }
+    
+    /// Extend the GridPath with a width-2 strip in the leftward direction
+    fn extend_left(&mut self) {
+        //Loop through the vertices in the vertex order until vertices are
+        //found forming an edge on the left boundary of the grid.  Once found
+        //extend the grid path along that edge.
+        for i in 1..self.vertex_order.len() {
+            //Check if the ith and i-1th vertices are on the left boundary
+            if self.vertex_order[i][0] != 0 || self.vertex_order[i-1][0] != 0 {
+                continue;
+            }
+
+            //If found then shift the grid path to the right by 2
+            let mut new_vertex_order: Vec<[usize; 2]> = self.get_right_shift_vertex_order(2);
+
+            //Decide which direction to move first and construct the loop ranges accordingly
+            let down_first: bool = new_vertex_order[i-1][1] < new_vertex_order[i][1];
+            let start_range = if down_first { (0..new_vertex_order[i-1][1] + 1).rev().collect::<Vec<_>>() } else { ((new_vertex_order[i-1][1])..self.m).collect::<Vec<_>>() };
+            let mid_range = if down_first { (0..self.m).collect::<Vec<_>>() } else { (0..self.m).rev().collect::<Vec<_>>() };
+            let end_range = if down_first { (new_vertex_order[i][1]..self.m).rev().collect::<Vec<_>>() } else { (0..new_vertex_order[i][1] + 1).collect::<Vec<_>>() };
+
+            //Initialize a Vec<[usize; 2]> containing the path to add
+            let mut ext_path: Vec<[usize; 2]> = Vec::new();
+
+            //Extend the GridPath to the right by 2
+            for j in start_range {
+                let next_vertex: [usize; 2] = [1, j];
+                ext_path.push(next_vertex);
+            }
+            for j in mid_range {
+                let next_vertex: [usize; 2] = [0, j];
+                ext_path.push(next_vertex);
+            }
+            for j in end_range {
+                let next_vertex: [usize; 2] = [1, j];
+                ext_path.push(next_vertex);
+            }
+
+            //Insert the newly constructed path into the new vertex order
+            //between the i and i-1 vertices and overwrite the current vertex order
+            new_vertex_order.splice(i..i, ext_path);
+            self.vertex_order = new_vertex_order;
+
+            //Initialize a new petgraph graph for display of the path and return
+            let new_graph = GridPath::get_graph_from_vertex_order(self.n + 2, self.m, &self.vertex_order);
+            self.graph = new_graph;
+
+            //Update the horizontal dimension of the graph and return
+            self.n += 2;
+            return;
+        }
+
+        //If we reach this point then panic, the graph cannot be extended to the right
+        panic!("No edges on right boundary of the grid, cannot extend to the right");
+    }
+
+    /// Given a GridExtension, extend the GridPath in that direction
+    pub fn extend(&mut self, direction: GridExtension) {
+        match direction {
+            GridExtension::Right => self.extend_right(),
+            GridExtension::Up    => self.extend_up(),
+            GridExtension::Left  => self.extend_left(),
+            GridExtension::Down  => self.extend_down()
+        }
+    }
+
+    /// Given a Vec<GridExtension>, extend the GridPath in those directions
+    pub fn extend_many(&mut self, extensions: &Vec<GridExtension>) {
+        for direction in extensions.iter() {
+            self.extend(*direction);
+        }
     }
 }
 
