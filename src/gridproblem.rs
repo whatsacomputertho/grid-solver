@@ -25,8 +25,8 @@ impl GridProblem {
     pub fn new(width: usize, height: usize, start_coords: [usize; 2], end_coords: [usize; 2]) -> GridProblem {
         //Sanity check the grid graph coordinates against the given
         //start and end vertex coordinates
-        if start_coords[0] >= width - 1 || end_coords[1] >= width - 1 ||
-           start_coords[1] >= height - 1 || end_coords[1] >= height - 1 {
+        if start_coords[0] >= width || end_coords[0] >= width ||
+           start_coords[1] >= height || end_coords[1] >= height {
             panic!(
                 "Vertex coordinates out of bounds of {} x {}: ({}, {}), ({}, {})",
                 width, height, start_coords[0], start_coords[1],
@@ -56,8 +56,8 @@ impl GridProblem {
         //start and end vertex coordinates
         let width: usize = grid_graph.get_width();
         let height: usize = grid_graph.get_height();
-        if start_coords[0] >= width - 1 || end_coords[1] >= width - 1 ||
-           start_coords[1] >= height - 1 || end_coords[1] >= height - 1 {
+        if start_coords[0] >= width || end_coords[0] >= width ||
+           start_coords[1] >= height || end_coords[1] >= height {
             panic!(
                 "Vertex coordinates out of bounds of {} x {}: ({}, {}), ({}, {})",
                 width, height, start_coords[0], start_coords[1],
@@ -82,6 +82,270 @@ impl GridProblem {
         let are_color_compatible: bool = self.grid_graph.are_color_compatible(self.start_coords, self.end_coords);
         let is_forbidden: bool = self.grid_graph.is_forbidden(self.start_coords, self.end_coords);
         if are_color_compatible && !is_forbidden {
+            return true;
+        }
+        return false;
+    }
+
+    /// Check if the grid problem can be stripped to the right
+    fn can_be_stripped_right(&self) -> bool {
+        //Check if either the start vertex or the end vertex is less than
+        //two units away from the right boundary
+        let bound: usize = self.grid_graph.get_width();
+        let start_diff: usize = bound - self.start_coords[0];
+        let end_diff: usize = bound - self.end_coords[0];
+        if start_diff <= 2 || end_diff <= 2 {
+            return false;
+        }
+
+        //If not then create a new GridProblem with width decreased by 2
+        //and check if it is acceptable
+        let stripped_grid_problem: GridProblem = GridProblem::new(
+            self.grid_graph.get_width() - 2,
+            self.grid_graph.get_height(),
+            self.start_coords,
+            self.end_coords
+        );
+        stripped_grid_problem.is_acceptable()
+    }
+
+    /// Check if the grid problem can be stripped above
+    fn can_be_stripped_up(&self) -> bool {
+        //Check if either the start vertex or the end vertex is less than
+        //two units away from the upper boundary
+        let bound: usize = self.grid_graph.get_height();
+        let start_diff: usize = bound - self.start_coords[1];
+        let end_diff: usize = bound - self.end_coords[1];
+        if start_diff <= 2 || end_diff <= 2 {
+            return false;
+        }
+
+        //If not then create a new GridProblem with height decreased by 2
+        //and check if it is acceptable
+        let stripped_grid_problem: GridProblem = GridProblem::new(
+            self.grid_graph.get_width(),
+            self.grid_graph.get_height() - 2,
+            self.start_coords,
+            self.end_coords
+        );
+        stripped_grid_problem.is_acceptable()
+    }
+
+    /// Check if the grid problem can be stripped to the left
+    fn can_be_stripped_left(&self) -> bool {
+        //Check if either the start vertex or the end vertex is less than
+        //two units away from the left boundary
+        if self.start_coords[0] < 2 || self.end_coords[0] < 2 {
+            return false;
+        }
+
+        //If not then create a new GridProblem with width decreased by 2
+        //and check if it is acceptable
+        let stripped_start_coords: [usize; 2] = [
+            self.start_coords[0] - 2,
+            self.start_coords[1]
+        ];
+        let stripped_end_coords: [usize; 2] = [
+            self.end_coords[0] - 2,
+            self.end_coords[1]
+        ];
+        let stripped_grid_problem: GridProblem = GridProblem::new(
+            self.grid_graph.get_width() - 2,
+            self.grid_graph.get_height(),
+            stripped_start_coords,
+            stripped_end_coords
+        );
+        stripped_grid_problem.is_acceptable()
+    }
+
+    /// Check if the grid problem can be stripped below
+    fn can_be_stripped_down(&self) -> bool {
+        //Check if either the start vertex or the end vertex is less than
+        //two units away from the upper boundary
+        if self.start_coords[1] < 2 || self.end_coords[1] < 2 {
+            return false;
+        }
+
+        //If not then create a new GridProblem with height decreased by 2
+        //and check if it is acceptable
+        let stripped_start_coords: [usize; 2] = [
+            self.start_coords[0],
+            self.start_coords[1] - 2
+        ];
+        let stripped_end_coords: [usize; 2] = [
+            self.end_coords[0],
+            self.end_coords[1] - 2
+        ];
+        let stripped_grid_problem: GridProblem = GridProblem::new(
+            self.grid_graph.get_width(),
+            self.grid_graph.get_height() - 2,
+            stripped_start_coords,
+            stripped_end_coords
+        );
+        stripped_grid_problem.is_acceptable()
+    }
+
+    /// Check if the grid problem can be stripped
+    pub fn can_be_stripped(&self) -> bool {
+        return self.can_be_stripped_right() || self.can_be_stripped_up() ||
+            self.can_be_stripped_left() || self.can_be_stripped_down();
+    }
+
+    /// Strip the grid problem to the right if it can be stripped
+    fn strip_right(&mut self) -> bool {
+        //Check if either the start vertex or the end vertex is less than
+        //two units away from the right boundary
+        let bound: usize = self.grid_graph.get_width();
+        let start_diff: usize = bound - self.start_coords[0];
+        let end_diff: usize = bound - self.end_coords[0];
+        if start_diff <= 2 || end_diff <= 2 {
+            return false;
+        }
+
+        //If not then create a new GridProblem with width decreased by 2
+        //and check if it is acceptable, if not then exit early
+        let stripped_grid_problem: GridProblem = GridProblem::new(
+            self.grid_graph.get_width() - 2,
+            self.grid_graph.get_height(),
+            self.start_coords,
+            self.end_coords
+        );
+        if !stripped_grid_problem.is_acceptable() {
+            return false;
+        }
+
+        //If it can be stripped to the right then strip it to the right
+        //and return true to signify that the problem was stripped
+        self.grid_graph = GridGraph::new(
+            self.grid_graph.get_width() - 2,
+            self.grid_graph.get_height()
+        );
+        self.extensions.push(GridExtension::Right);
+        true
+    }
+
+    /// Strip the grid problem above if it can be stripped
+    fn strip_up(&mut self) -> bool {
+        //Check if either the start vertex or the end vertex is less than
+        //two units away from the upper boundary
+        let bound: usize = self.grid_graph.get_height();
+        let start_diff: usize = bound - self.start_coords[1];
+        let end_diff: usize = bound - self.end_coords[1];
+        if start_diff <= 2 || end_diff <= 2 {
+            return false;
+        }
+
+        //If not then create a new GridProblem with height decreased by 2
+        //and check if it is acceptable, if not then exit early
+        let stripped_grid_problem: GridProblem = GridProblem::new(
+            self.grid_graph.get_width(),
+            self.grid_graph.get_height() - 2,
+            self.start_coords,
+            self.end_coords
+        );
+        if !stripped_grid_problem.is_acceptable() {
+            return false;
+        }
+
+        //If it can be stripped to the right then strip it above and return
+        //true to signify that the problem was stripped
+        self.grid_graph = GridGraph::new(
+            self.grid_graph.get_width(),
+            self.grid_graph.get_height() - 2
+        );
+        self.extensions.push(GridExtension::Up);
+        true
+    }
+
+    /// Strip the grid problem to the left if it can be stripped
+    fn strip_left(&mut self) -> bool {
+        //Check if either the start vertex or the end vertex is less than
+        //two units away from the left boundary, if so then exit early
+        if self.start_coords[0] < 2 || self.end_coords[0] < 2 {
+            return false;
+        }
+
+        //If not then create a new GridProblem with width decreased by 2
+        //and check if it is acceptable, if not then exit early
+        let stripped_start_coords: [usize; 2] = [
+            self.start_coords[0] - 2,
+            self.start_coords[1]
+        ];
+        let stripped_end_coords: [usize; 2] = [
+            self.end_coords[0] - 2,
+            self.end_coords[1]
+        ];
+        let stripped_grid_problem: GridProblem = GridProblem::new(
+            self.grid_graph.get_width() - 2,
+            self.grid_graph.get_height(),
+            stripped_start_coords,
+            stripped_end_coords
+        );
+        if !stripped_grid_problem.is_acceptable() {
+            return false;
+        }
+
+        //If it can be stripped to the left then strip it to the left
+        //and return true to signify that the problem was stripped
+        self.grid_graph = GridGraph::new(
+            self.grid_graph.get_width() - 2,
+            self.grid_graph.get_height()
+        );
+        self.start_coords = stripped_start_coords;
+        self.end_coords = stripped_end_coords;
+        self.extensions.push(GridExtension::Left);
+        true
+    }
+
+    /// Strip the grid problem below if it can be stripped
+    fn strip_down(&mut self) -> bool {
+        //Check if either the start vertex or the end vertex is less than
+        //two units away from the lower boundary, if so then exit early
+        if self.start_coords[1] < 2 || self.end_coords[1] < 2 {
+            return false;
+        }
+
+        //If not then create a new GridProblem with height decreased by 2
+        //and check if it is acceptable, if not then exit early
+        let stripped_start_coords: [usize; 2] = [
+            self.start_coords[0],
+            self.start_coords[1] - 2
+        ];
+        let stripped_end_coords: [usize; 2] = [
+            self.end_coords[0],
+            self.end_coords[1] - 2
+        ];
+        let stripped_grid_problem: GridProblem = GridProblem::new(
+            self.grid_graph.get_width(),
+            self.grid_graph.get_height() - 2,
+            stripped_start_coords,
+            stripped_end_coords
+        );
+        if !stripped_grid_problem.is_acceptable() {
+            return false;
+        }
+
+        //If it can be stripped below then strip it below and return true
+        //to signify that the problem was stripped
+        self.grid_graph = GridGraph::new(
+            self.grid_graph.get_width(),
+            self.grid_graph.get_height() - 2
+        );
+        self.start_coords = stripped_start_coords;
+        self.end_coords = stripped_end_coords;
+        self.extensions.push(GridExtension::Down);
+        true
+    }
+
+    /// Strip the grid problem if it can be stripped
+    pub fn strip(&mut self) -> bool {
+        if self.strip_right() {
+            return true;
+        } else if self.strip_up() {
+            return true;
+        } else if self.strip_left() {
+            return true;
+        } else if self.strip_down() {
             return true;
         }
         return false;
@@ -166,15 +430,13 @@ impl GridProblem {
                 return Some(solution_path);
             }
 
-            //If there is no solution path then break down the problem
-            //TODO: This implies the need for a GridProblem function "can_be_stripped"
-            //which assesses whether the grid problem can be stripped in any direction
-            //while self.can_be_stripped() {
-                //TODO: This implies the need for a GridProblem function "strip" which
-                //strips the GridProblem in some direction, following the same order as
-                //the aforementioned "can_be_stripped" function.
-            //    self.strip();
-            //}
+            //If there is no solution path then break down the problem. First strip the
+            //problem as much as possible (i.e. trim down the outside boundaries)
+            loop {
+                if !self.strip() {
+                    break;
+                }
+            }
 
             //If the GridProblem can be split, then get its subproblems, solve them, and
             //join their solutions into a solution path for the larger GridProblem.
