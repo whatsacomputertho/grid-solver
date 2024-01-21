@@ -14,7 +14,7 @@ use json::JsonValue;
 pub struct GridPath {
     n: usize,
     m: usize,
-    vertex_order: Vec<[usize; 2]>,
+    pub vertex_order: Vec<[usize; 2]>,
     graph: Graph<String, String, Undirected>
 }
 
@@ -141,18 +141,8 @@ impl GridPath {
         return None;
     }
 
-    /// Get the width of a grid graph
-    pub fn get_width(&self) -> usize {
-        self.n
-    }
-
-    /// Get the height of a grid graph
-    pub fn get_height(&self) -> usize {
-        self.m
-    }
-
     /// Increment the x coordinate of all vertices by a usize
-    fn get_right_shift_vertex_order(&self, shift: usize) -> Vec<[usize; 2]> {
+    pub fn get_right_shift_vertex_order(&self, shift: usize) -> Vec<[usize; 2]> {
         //Initialize a new vertex order vec
         let mut new_vertex_order: Vec<[usize; 2]> = Vec::new();
 
@@ -167,7 +157,7 @@ impl GridPath {
     }
 
     /// Increment the x coordinate of all vertices by a usize
-    fn get_up_shift_vertex_order(&self, shift: usize) -> Vec<[usize; 2]> {
+    pub fn get_up_shift_vertex_order(&self, shift: usize) -> Vec<[usize; 2]> {
         //Initialize a new vertex order vec
         let mut new_vertex_order: Vec<[usize; 2]> = Vec::new();
 
@@ -183,8 +173,6 @@ impl GridPath {
 
     /// Extend the GridPath with a height-2 strip in the upward direction
     fn extend_up(&mut self) {
-        //TODO: Remove debug println
-        println!("Extending up");
         //Loop through the vertices in the vertex order until vertices are
         //found forming an edge on the upper boundary of the grid.  Once
         //found extend the grid path along that edge.
@@ -238,8 +226,6 @@ impl GridPath {
 
     /// Extend the GridPath with a height-2 strip in the downward direction
     fn extend_down(&mut self) {
-        //TODO: Remove debug println
-        println!("Extending down");
         //Loop through the vertices in the vertex order until vertices are
         //found forming an edge on the upper boundary of the grid.  Once
         //found extend the grid path along that edge.
@@ -295,8 +281,6 @@ impl GridPath {
 
     /// Extend the GridPath with a width-2 strip in the rightward direction
     fn extend_right(&mut self) {
-        //TODO: Remove debug println
-        println!("Extending right");
         //Loop through the vertices in the vertex order until vertices are
         //found forming an edge on the right boundary of the grid.  Once found
         //extend the grid path along that edge.
@@ -349,8 +333,6 @@ impl GridPath {
     
     /// Extend the GridPath with a width-2 strip in the leftward direction
     fn extend_left(&mut self) {
-        //TODO: Remove debug println
-        println!("Extending left");
         //Loop through the vertices in the vertex order until vertices are
         //found forming an edge on the left boundary of the grid.  Once found
         //extend the grid path along that edge.
