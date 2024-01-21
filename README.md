@@ -4,11 +4,31 @@
 
 ## About
 
+![CLI Usage](img/cli-usage.gif)
+
 This utility implements algorithms for the existence & construction of a Hamiltonian path in an arbitrary grid graph.
 
 For more details, see:
 - [Problem specification](doc/problem-specification.md): A more informal, intuitive look at the problem
 - [_Hamilton Paths in Grid Graphs_](https://www.researchgate.net/publication/220616693_Hamilton_Paths_in_Grid_Graphs): The paper which originally formalized, generalized, and explored the problem
+
+### Usage
+
+```
+Draw a Hamiltonian path between two vertices in a grid graph G(n, m)
+
+Usage: grid-solver.exe [OPTIONS]
+
+Options:
+      --width <WIDTH>      Width of the grid
+      --height <HEIGHT>    Height of the grid
+      --start-x <START_X>  Start vertex x coordinate
+      --start-y <START_Y>  Start vertex y coordinate
+      --end-x <END_X>      End vertex x coordinate
+      --end-y <END_Y>      End vertex y coordinate
+  -h, --help               Print help
+  -V, --version            Print version
+```
 
 ### Motivation
 

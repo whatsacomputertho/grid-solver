@@ -1,3 +1,4 @@
+use std::process;
 use std::fmt;
 use petgraph::Undirected;
 use petgraph::graph::Graph;
@@ -75,11 +76,12 @@ impl GridGraph {
         //Sanity check on the input parameters
         if v_coords[0] >= self.n || v_coords[1] >= self.m ||
            w_coords[0] >= self.n || w_coords[1] >= self.m {
-            panic!(
+            eprintln!(
                 "Coordinates out of bounds: ({},{}), ({},{})",
                 v_coords[0], v_coords[1],
                 w_coords[0], w_coords[1]
             );
+            process::exit(1);
         }
 
         //Determine if the graph is even or odd
@@ -100,10 +102,11 @@ impl GridGraph {
     pub fn is_corner_vertex(&self, v_coords: [usize; 2]) -> bool {
         //Sanity check on the input parameters
         if v_coords[0] >= self.n || v_coords[1] >= self.m {
-            panic!(
+            eprintln!(
                 "Coordinate out of bounds: ({},{})",
                 v_coords[0], v_coords[1]
             );
+            process::exit(1);
         }
 
         //Initialize the corner vertex coords
@@ -225,11 +228,12 @@ impl GridGraph {
         //Sanity check on the input parameters
         if v_coords[0] >= self.n || v_coords[1] >= self.m ||
            w_coords[0] >= self.n || w_coords[1] >= self.m {
-            panic!(
+            eprintln!(
                 "Coordinates out of bounds: ({},{}), ({},{})",
                 v_coords[0], v_coords[1],
                 w_coords[0], w_coords[1]
-            )
+            );
+            process::exit(1);
         }
 
         //Check if either m or n is 1, if so then check the forbidden

@@ -1,6 +1,7 @@
 use crate::gridextension::GridExtension;
 
 use std::fmt;
+use std::process;
 use petgraph::Undirected;
 use petgraph::graph::Graph;
 use petgraph::visit::NodeIndexable;
@@ -221,7 +222,8 @@ impl GridPath {
         }
 
         //If we reach this point then panic, the graph cannot be extended up
-        panic!("No edges on upper boundary of the grid, cannot extend upward");
+        eprintln!("No edges on upper boundary of the grid, cannot extend upward");
+        process::exit(1);
     }
 
     /// Extend the GridPath with a height-2 strip in the downward direction
@@ -276,7 +278,8 @@ impl GridPath {
         }
 
         //If we reach this point then panic, the graph cannot be extended down
-        panic!("No edges on lower boundary of the grid, cannot extend downward");
+        eprintln!("No edges on lower boundary of the grid, cannot extend downward");
+        process::exit(1);
     }
 
     /// Extend the GridPath with a width-2 strip in the rightward direction
@@ -328,7 +331,8 @@ impl GridPath {
         }
 
         //If we reach this point then panic, the graph cannot be extended to the right
-        panic!("No edges on right boundary of the grid, cannot extend to the right");
+        eprintln!("No edges on right boundary of the grid, cannot extend to the right");
+        process::exit(1);
     }
     
     /// Extend the GridPath with a width-2 strip in the leftward direction
@@ -383,7 +387,8 @@ impl GridPath {
         }
 
         //If we reach this point then panic, the graph cannot be extended to the right
-        panic!("No edges on right boundary of the grid, cannot extend to the right");
+        eprintln!("No edges on right boundary of the grid, cannot extend to the right");
+        process::exit(1);
     }
 
     /// Given a GridExtension, extend the GridPath in that direction

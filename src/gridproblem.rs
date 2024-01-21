@@ -1,3 +1,4 @@
+use std::process;
 use crate::gridgraph::GridGraph;
 use crate::gridpath::GridPath;
 use crate::gridextension::GridExtension;
@@ -27,11 +28,12 @@ impl GridProblem {
         //start and end vertex coordinates
         if start_coords[0] >= width || end_coords[0] >= width ||
            start_coords[1] >= height || end_coords[1] >= height {
-            panic!(
+            eprintln!(
                 "Vertex coordinates out of bounds of {} x {}: ({}, {}), ({}, {})",
                 width, height, start_coords[0], start_coords[1],
                 end_coords[0], end_coords[1]
             );
+            process::exit(1);
         }
 
         //Initialize a new grid graph
@@ -609,8 +611,15 @@ impl GridProblem {
                 let (mut p_below, mut p_above): (GridProblem, GridProblem) = self.split_horizontally().unwrap();
                 let p_below_solution: GridPath = p_below.solve().unwrap();
                 let p_above_solution: GridPath = p_above.solve().unwrap();
-                let mut vertex_order: Vec<[usize; 2]> = p_below_solution.vertex_order;
-                vertex_order.extend(p_above_solution.get_up_shift_vertex_order(p_below.grid_graph.get_height()));
+                let vertex_order: Vec<[usize; 2]> = if self.start_coords[1] < self.end_coords[1] {
+                    let mut tmp_vertex_order: Vec<[usize; 2]> = p_below_solution.vertex_order;
+                    tmp_vertex_order.extend(p_above_solution.get_up_shift_vertex_order(p_below.grid_graph.get_height()));
+                    tmp_vertex_order
+                } else {
+                    let mut tmp_vertex_order: Vec<[usize; 2]> = p_above_solution.get_up_shift_vertex_order(p_below.grid_graph.get_height());
+                    tmp_vertex_order.extend(p_below_solution.vertex_order);
+                    tmp_vertex_order
+                };
                 let solution_path = GridPath::new(
                     p_below.grid_graph.get_width(),
                     p_below.grid_graph.get_height() + p_above.grid_graph.get_height(),
@@ -623,8 +632,15 @@ impl GridProblem {
                 let (mut p_left, mut p_right): (GridProblem, GridProblem) = self.split_vertically().unwrap();
                 let p_left_solution: GridPath = p_left.solve().unwrap();
                 let p_right_solution: GridPath = p_right.solve().unwrap();
-                let mut vertex_order: Vec<[usize; 2]> = p_left_solution.vertex_order;
-                vertex_order.extend(p_right_solution.get_right_shift_vertex_order(p_left.grid_graph.get_width()));
+                let vertex_order: Vec<[usize; 2]> = if self.start_coords[0] < self.end_coords[0] {
+                    let mut tmp_vertex_order: Vec<[usize; 2]> = p_left_solution.vertex_order;
+                    tmp_vertex_order.extend(p_right_solution.get_right_shift_vertex_order(p_left.grid_graph.get_width()));
+                    tmp_vertex_order
+                } else {
+                    let mut tmp_vertex_order: Vec<[usize; 2]> = p_right_solution.get_right_shift_vertex_order(p_left.grid_graph.get_width());
+                    tmp_vertex_order.extend(p_left_solution.vertex_order);
+                    tmp_vertex_order
+                };
                 let solution_path = GridPath::new(
                     p_left.grid_graph.get_width() + p_right.grid_graph.get_width(),
                     p_left.grid_graph.get_height(),
@@ -655,7 +671,8 @@ impl GridProblem {
             }
 
             //This point should be unreachable, to avoid an infinite loop here we panic
-            panic!("Grid problem was acceptable but had no solution, could not be stripped, split, or solved.");
+            eprintln!("Grid problem was acceptable but had no solution, could not be stripped, split, or solved.");
+            process::exit(1);
         }
     }
 }
