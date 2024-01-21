@@ -2,34 +2,44 @@ mod gridgraph;
 mod gridpath;
 mod gridproblem;
 mod gridextension;
+mod gridcli;
 
-use crate::gridgraph::GridGraph;
+use clap::Parser;
+use crate::gridcli::GridCli;
 use crate::gridpath::GridPath;
 use crate::gridproblem::GridProblem;
-use crate::gridextension::GridExtension;
 
 fn main() {
-    //Initialize a prime grid graph which is extended in every
-    //direction.  This is intended to test our stripping functionality.
-    //The original prime grid graph is 4 x 5 with start and end coords
-    //(1, 1) and (0, 1) respectively.  The resulting extended graph is
-    //8 x 9 with start and end coords (3, 3) and (2, 3) respectively.
-    let prime_grid_graph: GridGraph = GridGraph::new(8, 9);
-    println!("Dimension 4 x 5 grid graph (possibly prime)");
-    println!("{}", prime_grid_graph);
-    let mut prime_grid_problem: GridProblem = GridProblem::from_grid_graph(
-        prime_grid_graph,
-        [3, 3], [2, 3]
-    );
+    //Parse the command line args
+    let cli_args = GridCli::parse();
+    let width: usize = match cli_args.width {
+        Some(x) => x as usize,
+        None => panic!("Please specify the width of the grid using the --width argument")
+    };
+    let height: usize = match cli_args.height {
+        Some(x) => x as usize,
+        None => panic!("Please specify the height of the grid using the --height argument")
+    };
+    let start_x: usize = match cli_args.start_x {
+        Some(x) => x as usize,
+        None => panic!("Please specify the x coordinate of the start vertex using the --start-x argument")
+    };
+    let start_y: usize = match cli_args.start_y {
+        Some(x) => x as usize,
+        None => panic!("Please specify the y coordinate of the start vertex using the --start-y argument")
+    };
+    let end_x: usize = match cli_args.end_x {
+        Some(x) => x as usize,
+        None => panic!("Please specify the x coordinate of the end vertex using the --end-x argument")
+    };
+    let end_y: usize = match cli_args.end_y {
+        Some(x) => x as usize,
+        None => panic!("Please specify the y coordinate of the end vertex using the --end-x argument")
+    };
 
-    //Check if the prime grid problem can be stripped (should be true)
-    println!("Can the problem be stripped? {}", prime_grid_problem.can_be_stripped());
-
-    //Solve the prime grid problem and print the solution.  The problem
-    //should have been stripped down until the prime 4 x 5 problem was encountered
-    //at which point it should have retrieved the prime solution and then extended
-    //the solution back up to the 8 x 9 case.
-    let mut prime_solution: GridPath = prime_grid_problem.solve().unwrap();
-    println!("Solution");
-    println!("{}", prime_solution);
+    //Initialize a grid problem given the dimensions of the grid graph
+    //and the start and end coordinates
+    let mut problem: GridProblem = GridProblem::new(width, height, [start_x, start_y], [end_x, end_y]);
+    let solution: GridPath = problem.solve().unwrap();
+    println!("{}", solution);
 }

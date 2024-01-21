@@ -184,14 +184,12 @@ impl GridGraph {
 
         //Check if the opposite dimension is odd, if so then break
         if opp_dim & 1 == 1 {
-            println!("Opposite dimesion is odd");
             return false;
         }
 
         //Check if v has the same color as w, if they share the same
         //color then break
         if (w_coords[0]+w_coords[1]) & 1 == (v_coords[0]+v_coords[1]) & 1 {
-            println!("V and W share the same color");
             return false;
         }
 
@@ -205,7 +203,6 @@ impl GridGraph {
         
         //Break if the distance condition is not satisfied
         if !is_dst_sat {
-            println!("Distance condition not satisfied");
             return false;
         }
 
@@ -213,10 +210,8 @@ impl GridGraph {
         //vertex matches the parity of the far corner vertices if
         //v is greater than w, or the near corner vertices otherwise
         if is_greater && ((v_coords[0]+v_coords[1]) & 1 == (1 & 1)) {
-            println!("V matches the far corner vertex color");
             return false; //v shares color with far corner vertices
         } else if !is_greater && ((v_coords[0]+v_coords[1]) & 1 == (0 & 1)) {
-            println!("V matches the near corner vertex color");
             return false; //v shares color with near corner vertices
         }
 
